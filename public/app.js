@@ -11,6 +11,26 @@ const chatContainer = document.getElementById('chat-container');
 const usernameContainer = document.getElementById('username-container');
 
 let currentUsername = '';
+let isScrolledToBottom = true;
+
+// Check if user is scrolled to bottom
+function checkScrollPosition() {
+    const { scrollTop, scrollHeight, clientHeight } = messagesDiv;
+    isScrolledToBottom = Math.abs(scrollHeight - clientHeight - scrollTop) < 10;
+}
+
+// Scroll to bottom smoothly
+function scrollToBottom() {
+    messagesDiv.scrollTo({
+        top: messagesDiv.scrollHeight,
+        behavior: 'smooth'
+    });
+}
+
+// Scroll to bottom immediately (for new messages)
+function scrollToBottomImmediate() {
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+}
 
 // Handle username submission
 usernameForm.addEventListener('submit', (e) => {
@@ -23,6 +43,7 @@ usernameForm.addEventListener('submit', (e) => {
     usernameContainer.style.display = 'none';
     chatContainer.style.display = 'block';
     messageInput.disabled = false;
+    messageInput.focus();
   }
 });
 
@@ -44,6 +65,7 @@ messageForm.addEventListener('submit', (e) => {
     // Send to server
     socket.emit('message', messageData);
     messageInput.value = '';
+    messageInput.focus();
   }
 });
 
@@ -75,28 +97,75 @@ socket.on('disconnect', () => {
 // Add message to chat
 function addMessageToChat(message) {
   console.log('Adding message to chat:', message);
+  
+  // Check scroll position before adding message
+  checkScrollPosition();
+  
   const messageElement = document.createElement('div');
   messageElement.classList.add('message');
   
   const timestamp = new Date(message.timestamp).toLocaleTimeString();
   const isSystemMessage = message.username === 'System';
   
+  // Sanitize message text to prevent XSS
+  const sanitizedText = escapeHtml(message.text);
+  
   messageElement.innerHTML = `
     <div class="message-header">
-      <span class="username ${isSystemMessage ? 'system' : ''}">${message.username}</span>
+      <span class="username ${isSystemMessage ? 'system' : ''}">${escapeHtml(message.username)}</span>
       <span class="timestamp">${timestamp}</span>
     </div>
-    <div class="message-content ${isSystemMessage ? 'system' : ''}">${message.text}</div>
+    <div class="message-content ${isSystemMessage ? 'system' : ''}">${sanitizedText}</div>
   `;
   
   messagesDiv.appendChild(messageElement);
-  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  
+  // Scroll to bottom if user was already at bottom, or if it's their own message
+  if (isScrolledToBottom || message.username === currentUsername) {
+    scrollToBottomImmediate();
+  }
+  
+  // Limit number of messages to prevent memory issues (keep last 100 messages)
+  const messages = messagesDiv.querySelectorAll('.message');
+  if (messages.length > 100) {
+    messages[0].remove();
+  }
 }
+
+// Escape HTML to prevent XSS
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Handle scroll events
+messagesDiv.addEventListener('scroll', checkScrollPosition);
 
 // Handle Enter key in message input
 messageInput.addEventListener('keypress', (e) => {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
     messageForm.dispatchEvent(new Event('submit'));
+  }
+});
+
+// Auto-resize text input for long messages
+messageInput.addEventListener('input', function() {
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+});
+
+// Focus management
+document.addEventListener('click', (e) => {
+  if (e.target.closest('#chat-container') && !e.target.closest('#message-form')) {
+    messageInput.focus();
+  }
+});
+
+// Handle window resize
+window.addEventListener('resize', () => {
+  if (isScrolledToBottom) {
+    scrollToBottomImmediate();
   }
 }); 
