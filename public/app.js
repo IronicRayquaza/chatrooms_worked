@@ -12,6 +12,7 @@ const usernameContainer = document.getElementById('username-container');
 
 let currentUsername = '';
 let isScrolledToBottom = true;
+let hasJoinedChat = false; // Track if user has joined
 
 // Check if user is scrolled to bottom
 function checkScrollPosition() {
@@ -44,6 +45,13 @@ usernameForm.addEventListener('submit', (e) => {
     chatContainer.style.display = 'block';
     messageInput.disabled = false;
     messageInput.focus();
+    hasJoinedChat = true;
+    // Show connected message only after joining
+    addMessageToChat({
+      username: 'System',
+      text: 'Connected to chat server',
+      timestamp: new Date().toISOString()
+    });
   }
 });
 
@@ -78,11 +86,14 @@ socket.on('message', (message) => {
 // Handle connection status
 socket.on('connect', () => {
   console.log('Connected to server');
-  addMessageToChat({
-    username: 'System',
-    text: 'Connected to chat server',
-    timestamp: new Date().toISOString()
-  });
+  // Only show system message if user has joined
+  if (hasJoinedChat) {
+    addMessageToChat({
+      username: 'System',
+      text: 'Connected to chat server',
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 socket.on('disconnect', () => {
