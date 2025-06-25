@@ -38,7 +38,6 @@ usernameForm.addEventListener('submit', (e) => {
   e.preventDefault();
   const username = usernameInput.value.trim();
   if (username) {
-    console.log('Registering username:', username);
     currentUsername = username;
     socket.emit('register', username);
     usernameContainer.style.display = 'none';
@@ -60,7 +59,6 @@ messageForm.addEventListener('submit', (e) => {
   e.preventDefault();
   const message = messageInput.value.trim();
   if (message && currentUsername) {
-    console.log('Sending message:', message);
     const messageData = {
       username: currentUsername,
       text: message,
@@ -79,13 +77,11 @@ messageForm.addEventListener('submit', (e) => {
 
 // Handle incoming messages
 socket.on('message', (message) => {
-  console.log('Received message:', message);
   addMessageToChat(message);
 });
 
 // Handle connection status
 socket.on('connect', () => {
-  console.log('Connected to server');
   // Only show system message if user has joined
   if (hasJoinedChat) {
     addMessageToChat({
@@ -97,7 +93,6 @@ socket.on('connect', () => {
 });
 
 socket.on('disconnect', () => {
-  console.log('Disconnected from server');
   addMessageToChat({
     username: 'System',
     text: 'Disconnected from chat server',
@@ -107,8 +102,6 @@ socket.on('disconnect', () => {
 
 // Add message to chat
 function addMessageToChat(message) {
-  console.log('Adding message to chat:', message);
-  
   // Check scroll position before adding message
   checkScrollPosition();
   
