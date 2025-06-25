@@ -6,11 +6,22 @@ const io = require('socket.io')(http);
 const { spawn } = require('child_process');
 const path = require('path');
 
-// Add debugging middleware
+// Security headers for production
 app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   next();
 });
+
+// Add debugging middleware (only in development)
+if (process.env.NODE_ENV !== 'production') {
+  app.use((req, res, next) => {
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+    next();
+  });
+}
 
 // Check for required environment variables
 if (!process.env.AOS_PROCESS_ID) {
@@ -18,6 +29,7 @@ if (!process.env.AOS_PROCESS_ID) {
   console.error('Please set it using:');
   console.error('Windows: set AOS_PROCESS_ID=your_process_id');
   console.error('Linux/Mac: export AOS_PROCESS_ID=your_process_id');
+  console.error('For deployment, set this in your hosting platform\'s environment variables');
   process.exit(1);
 }
 
@@ -35,6 +47,11 @@ app.use(express.static('public', {
 // Add a test route
 app.get('/test', (req, res) => {
   res.send('Server is running!');
+});
+
+// Health check endpoint for deployment platforms
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
 // Store connected users and their socket IDs

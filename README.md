@@ -1,118 +1,179 @@
 # AOS Chatroom
 
-A real-time chat application built with Node.js, Socket.IO, and AOS (Arweave Operating System). This application allows users to communicate in real-time through a web interface while leveraging the AOS messaging system.
-
-## Prerequisites
-
-Before you begin, ensure you have the following installed:
-- Node.js (v14 or higher)
-- npm (Node Package Manager)
-- AOS CLI (Arweave Operating System Command Line Interface)
-
-## Installation
-
-1. Clone the repository:
-```bash
-git clone <repository-url>
-cd chat_final
-```
-
-2. Install dependencies:
-```bash
-npm install
-```
-
-3. Install AOS globally (if not already installed):
-```bash
-npm install -g aos
-```
-
-## Configuration
-
-1. Create a `.env` file in the root directory:
-```bash
-touch .env
-```
-
-2. Add the following environment variables to the `.env` file:
-```
-AOS_PROCESS_ID=your_aos_process_id
-PORT=3000
-```
-
-Replace `your_aos_process_id` with your actual AOS process ID.
-
-## Project Structure
-
-```
-chat_final/
-├── public/
-│   ├── index.html    # Main HTML file
-│   ├── style.css     # CSS styles
-│   └── app.js        # Client-side JavaScript
-├── server.js         # Node.js server
-├── chatroom_final.lua # AOS Lua script
-├── package.json      # Project dependencies
-└── .env             # Environment variables
-```
-
-## Running the Application
-
-1. Start the AOS process:
-```bash
-aos
-```
-
-2. In the AOS terminal, load the chatroom script:
-```
-.load chatroom_final
-```
-
-3. In a new terminal, start the Node.js server:
-```bash
-node server.js
-```
-
-4. Open your web browser and navigate to:
-```
-http://localhost:3000
-```
-
-## Using the Chat
-
-1. Enter your username in the input field and click "Join Chat"
-2. Once joined, you can start sending messages
-3. Open multiple browser windows to simulate different users
-4. Messages will be broadcasted to all connected users in real-time
+A real-time web-based chatroom application that integrates with AOS (Arweave Operating System).
 
 ## Features
 
 - Real-time messaging using Socket.IO
-- User registration and presence
-- System messages for user join/leave events
-- Timestamp display for messages
-- Modern and responsive UI
-- Integration with AOS messaging system
+- User registration and management
+- Integration with AOS process
+- Modern, responsive UI
+- Production-ready deployment configuration
+
+## Local Development
+
+### Prerequisites
+
+- Node.js (version 16 or higher)
+- AOS CLI installed globally: `npm install -g aos`
+
+### Setup
+
+1. Clone the repository
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Set environment variables:
+   ```bash
+   # Windows
+   set AOS_PROCESS_ID=your_process_id
+   
+   # Linux/Mac
+   export AOS_PROCESS_ID=your_process_id
+   ```
+
+4. Start the development server:
+   ```bash
+   npm run dev
+   ```
+
+5. Open your browser and navigate to `http://localhost:3000`
+
+## Deployment
+
+### Option 1: Render (Recommended - Free Tier)
+
+1. **Fork/Clone** this repository to your GitHub account
+2. **Sign up** for a free account at [render.com](https://render.com)
+3. **Create a new Web Service** and connect your GitHub repository
+4. **Configure the service**:
+   - **Name**: `aos-chatroom` (or any name you prefer)
+   - **Environment**: `Node`
+   - **Build Command**: `npm install`
+   - **Start Command**: `npm start`
+   - **Plan**: Free
+
+5. **Set Environment Variables**:
+   - `AOS_PROCESS_ID`: Generate a unique process ID (e.g., `chatroom-${Date.now()}`)
+   - `NODE_ENV`: `production`
+   - `PORT`: `10000` (Render will override this)
+
+6. **Deploy** - Render will automatically deploy your app and provide a URL
+
+### Option 2: Heroku
+
+1. **Install Heroku CLI** and login
+2. **Create a new Heroku app**:
+   ```bash
+   heroku create your-app-name
+   ```
+
+3. **Set environment variables**:
+   ```bash
+   heroku config:set AOS_PROCESS_ID=your_process_id
+   heroku config:set NODE_ENV=production
+   ```
+
+4. **Deploy**:
+   ```bash
+   git push heroku main
+   ```
+
+### Option 3: Railway
+
+1. **Sign up** at [railway.app](https://railway.app)
+2. **Connect your GitHub repository**
+3. **Set environment variables** in the Railway dashboard:
+   - `AOS_PROCESS_ID`: Your unique process ID
+   - `NODE_ENV`: `production`
+
+4. **Deploy** - Railway will automatically deploy your app
+
+### Option 4: DigitalOcean App Platform
+
+1. **Sign up** for DigitalOcean
+2. **Create a new app** and connect your GitHub repository
+3. **Configure**:
+   - **Source**: GitHub repository
+   - **Branch**: `main`
+   - **Build Command**: `npm install`
+   - **Run Command**: `npm start`
+
+4. **Set environment variables**:
+   - `AOS_PROCESS_ID`: Your unique process ID
+   - `NODE_ENV`: `production`
+
+## Environment Variables
+
+| Variable | Description | Required | Example |
+|----------|-------------|----------|---------|
+| `AOS_PROCESS_ID` | Unique identifier for the AOS process | Yes | `chatroom-12345` |
+| `NODE_ENV` | Environment mode | No | `production` |
+| `PORT` | Server port (set by hosting platform) | No | `3000` |
+
+## Important Notes for Deployment
+
+### AOS Dependency
+Your application depends on the AOS CLI being available in the deployment environment. Most cloud platforms don't have AOS pre-installed, so you'll need to:
+
+1. **Install AOS during build** by adding to your `package.json`:
+   ```json
+   {
+     "scripts": {
+       "postinstall": "npm install -g aos"
+     }
+   }
+   ```
+
+2. **Or use a custom Dockerfile** (see Docker deployment section below)
+
+### Process ID Management
+- Generate a unique `AOS_PROCESS_ID` for each deployment
+- Consider using environment-specific IDs (e.g., `chatroom-prod`, `chatroom-staging`)
+- The process ID should be consistent across deployments of the same environment
+
+## Docker Deployment
+
+If you prefer Docker deployment, create a `Dockerfile`:
+
+```dockerfile
+FROM node:18-alpine
+
+# Install AOS globally
+RUN npm install -g aos
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+
+EXPOSE 3000
+
+CMD ["npm", "start"]
+```
 
 ## Troubleshooting
 
-If you encounter any issues:
+### Common Issues
 
-1. Check that AOS is running and the process ID is correct
-2. Verify that the server is running on the correct port
-3. Check the browser console (F12) for any client-side errors
-4. Check the server terminal for any server-side errors
-5. Ensure all dependencies are properly installed
+1. **AOS not found**: Ensure AOS is installed globally in your deployment environment
+2. **Process ID conflicts**: Use unique process IDs for different deployments
+3. **Port binding**: Most platforms set their own PORT environment variable
+4. **WebSocket issues**: Ensure your hosting platform supports WebSocket connections
 
-Common issues:
-- "AOS not found": Make sure AOS is installed globally
-- "Cannot connect to server": Check if the server is running
-- "Messages not appearing": Check browser console for errors
-
-## Contributing
-
-Feel free to submit issues and enhancement requests!
+### Health Check
+Your app includes a health check endpoint at `/health` that returns:
+```json
+{
+  "status": "ok",
+  "timestamp": "2024-01-01T00:00:00.000Z"
+}
+```
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details. 
+MIT License 

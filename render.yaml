@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: aos-chatroom
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: AOS_PROCESS_ID
+        generateValue: true
+      - key: PORT
+        value: 10000 
